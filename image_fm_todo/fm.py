@@ -46,8 +46,8 @@ class FMScheduler(nn.Module):
         ######## TODO ########
         # DO NOT change the code outside this part.
         # compute psi_t(x)
-
-        psi_t = x1
+        sigma_t = 1 - (1 - self.sigma_min) * t
+        psi_t = t * x1 + sigma_t * x
         ######################
 
         return psi_t
@@ -61,7 +61,8 @@ class FMScheduler(nn.Module):
         ######## TODO ########
         # DO NOT change the code outside this part.
         # implement each step of the first-order Euler method.
-        x_next = xt
+        dt = expand_t(dt, xt)
+        x_next = xt + dt * vt
         ######################
 
         return x_next
@@ -93,12 +94,14 @@ class FlowMatching(nn.Module):
         ######## TODO ########
         # DO NOT change the code outside this part.
         # Implement the CFM objective.
+        psi_t = self.fm_scheduler.compute_psi_t(x1, t, x0) 
         if class_label is not None:
-            model_out = self.network(x1, t, class_label=class_label)
+            model_out = self.network(psi_t, t, class_label=class_label)
         else:
-            model_out = self.network(x1, t)
+            model_out = self.network(psi_t, t)
+        conditional_vector_field = x1 - (1 - self.fm_scheduler.sigma_min) * x0
+        loss = F.mse_loss(model_out, conditional_vector_field)
 
-        loss = x1.mean()
         ######################
 
         return loss
@@ -143,7 +146,15 @@ class FlowMatching(nn.Module):
             ######## TODO ########
             # Complete the sampling loop
 
-            xt = self.fm_scheduler.step(xt, torch.zeros_like(xt), torch.zeros_like(t))
+            if do_classifier_free_guidance:
+                # For classifier-free guidance, we need to compute the vector field for both the unconditional and conditional cases.
+                model_out_uncond = self.network(xt, t)
+                model_out_cond = self.network(xt, t, class_label=class_label)
+                model_out = model_out_uncond + guidance_scale * (model_out_cond - model_out_uncond)
+            else:
+                model_out = self.network(xt, t) 
+            dt = t_next - t
+            xt = self.fm_scheduler.step(xt, model_out, dt)
 
             ######################
 
