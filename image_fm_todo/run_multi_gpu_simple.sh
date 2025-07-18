@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Install accelerate if not already installed
-pip install accelerate
-
 # Configure accelerate for multi-GPU (you can also run 'accelerate config' interactively)
 export ACCELERATE_USE_DEEPSPEED=false
 export ACCELERATE_MIXED_PRECISION=fp16
@@ -20,5 +17,4 @@ accelerate launch --multi_gpu --num_processes=4 train.py \
     --image_resolution 64 \
     --use_cfg \
     --cfg_dropout 0.1 \
-    --gradient_accumulation_steps 1 \
-    --mixed_precision fp16
+    --gradient_accumulation_steps 1

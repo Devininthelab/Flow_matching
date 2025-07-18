@@ -90,8 +90,11 @@ def main(args):
     set_seed(config.seed)
 
     if accelerator.is_main_process:
+        # Create a JSON-serializable version of config
+        config_dict = dict(config)
+        config_dict['device'] = str(config.device)  # Convert device to string for JSON
         with open(save_dir / "config.json", "w") as f:
-            json.dump(config, f, indent=2)
+            json.dump(config_dict, f, indent=2)
     """######"""
 
     # Initialize wandb only on main process
@@ -213,9 +216,9 @@ def main(args):
             
             with accelerator.accumulate(fm):
                 if args.use_cfg:  # Conditional, CFG training
-                    loss = fm.get_loss(img, class_label=label)
+                    loss = fm.module.get_loss(img, class_label=label)
                 else:  # Unconditional training
-                    loss = fm.get_loss(img)
+                    loss = fm.module.get_loss(img)
                 
                 accelerator.backward(loss)
                 optimizer.step()
@@ -225,6 +228,11 @@ def main(args):
             # Gather loss across all processes for logging
             gathered_loss = accelerator.gather(loss).mean()
             losses.append(gathered_loss.item())
+            
+            # Log loss and learning rate to wandb (only on main process)
+            if accelerator.is_main_process:
+                wandb.log({"loss": gathered_loss.item()}, step=step)
+                wandb.log({"lr": scheduler.get_last_lr()[0]}, step=step)
             
             if accelerator.is_local_main_process:
                 pbar.set_description(f"Loss: {gathered_loss.item():.4f}")

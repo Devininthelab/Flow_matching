@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Install accelerate if not already installed
-pip install accelerate
-
 # Launch multi-GPU training with accelerate
 accelerate launch --config_file accelerate_config.yaml train.py \
     --batch_size 32 \

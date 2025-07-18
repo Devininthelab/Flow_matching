@@ -11,3 +11,5 @@ jaxtyping==0.2.20
 pytorch_lightning
 dotmap
 numpy==1.26.0
+accelerate
+wandb

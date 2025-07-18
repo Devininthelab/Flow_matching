@@ -29,6 +29,9 @@ Moreover, Flow Matching is developed from the perspective of _flow_, a time-depe
 
 Experimental results have sohwn that the FM objective and its simpler trajectory are highly effective in modeling the data distribution, Making FM a compelling alternative to diffusion models.
 
+## Wandb-run link:
+[Flow Matching](https://wandb.ai/winvswon78-nanyang-technological-university-singapore/flow_matching_ahq/workspace?nw=nwuserwinvswon78)
+
 ## Setup
 
 Install the required package within the `requirements.txt`

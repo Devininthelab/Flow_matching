@@ -56,3 +56,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(args)
+    # python sampling.py --use_cfg --ckpt_path results/cfg_fm-07-17-114436/last.ckpt --save_dir ../result/eval_sampling
