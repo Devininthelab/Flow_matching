@@ -184,3 +184,25 @@ class FlowMatching(nn.Module):
         self.fm_scheduler = hparams["fm_scheduler"]
 
         self.load_state_dict(state_dict)
+    
+    def load_accelerate(self, file_path):
+        dic = torch.load(file_path, map_location="cpu", weights_only=False)
+        
+        # Extract state dict from accelerate save format
+        if "state_dict" in dic:
+            state_dict = dic["state_dict"]
+        else:
+            # If it's directly the state dict
+            state_dict = dic
+        
+        # Remove 'module.' prefix if it exists (from DistributedDataParallel)
+        new_state_dict = {}
+        for key, value in state_dict.items():
+            if key.startswith('module.'):
+                new_key = key[7:]  # Remove 'module.' prefix
+            else:
+                new_key = key
+            new_state_dict[new_key] = value
+
+        # Load the state dict with accelerate compatibility
+        self.load_state_dict(new_state_dict, strict=False)
